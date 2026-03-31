@@ -7,7 +7,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context,WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     return Scaffold(body: Center(child: Text("Home Screen")),floatingActionButton: ElevatedButton(onPressed: () {
-      ref.read(authNotifierProvider.notifier).sighnOut();
+      ref.read(authNotifierProvider.notifier).signOut();
     }, child: Text("Signout")),);
   }
 }

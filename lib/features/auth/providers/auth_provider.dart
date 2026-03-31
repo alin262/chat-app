@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -25,18 +26,36 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      await FirebaseAuth.instance.signInWithCredential(credantials);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credantials,
+      );
+      final user = userCredential.user;
+      if (user != null) {
+        await FirebaseFirestore.instance
+        .collection("users")
+        .doc(user.uid)
+        .set({
+          "uid": user.uid,
+          "name": user.displayName,
+          "email": user.email,
+          "photoURL": user.photoURL,
+          "createAt": FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+
       state = const AsyncValue.data(null);
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     }
   }
-  Future<void> sighnOut() async{
+
+  Future<void> signOut() async {
     await GoogleSignIn().signOut();
     await FirebaseAuth.instance.signOut();
   }
 }
 
-final authNotifierProvider =StateNotifierProvider<AuthNotifier,AsyncValue<void>>((ref) {
-  return AuthNotifier();
-},);
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AsyncValue<void>>((ref) {
+      return AuthNotifier();
+    });
