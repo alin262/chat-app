@@ -19,6 +19,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: authState.when(
         data: (data) => data != null ? HomeScreen() : LoginScreen(),
         error: (error, stackTrace) =>
