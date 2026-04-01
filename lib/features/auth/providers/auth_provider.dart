@@ -31,10 +31,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
       );
       final user = userCredential.user;
       if (user != null) {
-        await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user.uid)
-        .set({
+        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
           "uid": user.uid,
           "name": user.displayName,
           "email": user.email,

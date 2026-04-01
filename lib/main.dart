@@ -24,7 +24,8 @@ class MyApp extends ConsumerWidget {
         data: (data) => data != null ? HomeScreen() : LoginScreen(),
         error: (error, stackTrace) =>
             Scaffold(body: Center(child: Text("Error: $error "))),
-        loading: () => Scaffold(backgroundColor: Color(0xFF3E2C23),
+        loading: () => Scaffold(
+          backgroundColor: Color(0xFF3E2C23),
           body: SafeArea(
             child: Center(
               child: Column(
