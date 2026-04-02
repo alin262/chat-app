@@ -1,4 +1,5 @@
 import 'package:chat_app/features/auth/providers/auth_provider.dart';
+import 'package:chat_app/features/chat/screens/chat_screen.dart';
 import 'package:chat_app/features/home/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,7 +79,15 @@ class _SearchSheet extends ConsumerWidget {
                           user.email,
                           style: TextStyle(color: Colors.white60),
                         ),
-                        onTap: () => Navigator.pop(context),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(receiver: user),
+                            ),
+                          );
+                        },
                       );
                     },
                   );
