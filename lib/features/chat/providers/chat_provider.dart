@@ -25,8 +25,8 @@ final messagesProvider = StreamProvider.family<List<Message>, String>((
       );
 });
 
-class chatNotifier extends StateNotifier<AsyncValue<void>> {
-  chatNotifier() : super(const AsyncValue.data(null));
+class ChatNotifier extends StateNotifier<AsyncValue<void>> {
+  ChatNotifier() : super(const AsyncValue.data(null));
 
   Future<void> sendMessage({
     required String conversationId,
@@ -61,8 +61,8 @@ class chatNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final chatProvider = StateNotifierProvider<chatNotifier, AsyncValue<void>>((
+final chatProvider = StateNotifierProvider<ChatNotifier, AsyncValue<void>>((
   ref,
 ) {
-  return chatNotifier();
+  return ChatNotifier();
 });

@@ -1,9 +1,11 @@
 import 'package:chat_app/features/auth/providers/auth_provider.dart';
+import 'package:chat_app/features/chat/providers/conversations_provider.dart';
 import 'package:chat_app/features/chat/screens/chat_screen.dart';
 import 'package:chat_app/features/home/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:intl/intl.dart';
 
 final searchQueryProvider = StateProvider<String>((ref) => "");
 
@@ -83,8 +85,15 @@ class _SearchSheet extends ConsumerWidget {
                           Navigator.pop(context);
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatScreen(receiver: user),
+                            PageRouteBuilder(
+                              pageBuilder: (_, __, ___) =>
+                                  ChatScreen(receiver: user),
+                              transitionsBuilder: (_, animation, __, child) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                );
+                              },
                             ),
                           );
                         },
@@ -102,25 +111,16 @@ class _SearchSheet extends ConsumerWidget {
 }
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
-  void _showSearchSheet(BuildContext context, WidgetRef ref) {
-    ref.read(searchQueryProvider.notifier).state = "";
-    showModalBottomSheet(
-      backgroundColor: Color(0xFF3E2C23),
-      isScrollControlled: true,
-      context: context,
-      builder: (context) => ProviderScope(child: _SearchSheet()),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final conversationsAsync = ref.watch(conversationsProvider);
+
     return Scaffold(
       backgroundColor: Color(0xFF3E2C23),
       appBar: AppBar(
         backgroundColor: Color(0xFF3E2C23),
         title: Text(
-          "Chats",
+          'Chats',
           style: TextStyle(
             color: Color(0xFFF5E9D8),
             fontWeight: FontWeight.bold,
@@ -129,9 +129,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              _showSearchSheet(context, ref);
-            },
+            onPressed: () => _showSearchSheet(context, ref),
             icon: Icon(Icons.search, color: Color(0xFFF5E9D8)),
           ),
           IconButton(
@@ -142,13 +140,86 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Text(
-          "No conversations yet!\nTap 🔍 to find someone to chat with.",
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFFF5E9D8)),
+      body: conversationsAsync.when(
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (e, s) => Center(
+          child: Text('Error: $e', style: TextStyle(color: Colors.red)),
         ),
+        data: (conversations) => conversations.isEmpty
+            ? Center(
+                child: Text(
+                  'No conversations yet!\nTap 🔍 to find someone to chat with.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFFF5E9D8)),
+                ),
+              )
+            : ListView.builder(
+                itemCount: conversations.length,
+                itemBuilder: (context, index) {
+                  final conversation = conversations[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage:
+                          conversation.otherUser.photoURL.isNotEmpty
+                          ? NetworkImage(conversation.otherUser.photoURL)
+                          : null,
+                      child: conversation.otherUser.photoURL.isEmpty
+                          ? Text(conversation.otherUser.name[0].toUpperCase())
+                          : null,
+                    ),
+                    title: Text(
+                      conversation.otherUser.name,
+                      style: TextStyle(
+                        color: Color(0xFFF5E9D8),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      conversation.lastMessage,
+                      style: TextStyle(color: Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: conversation.lastMessageTime != null
+                        ? Text(
+                            DateFormat(
+                              'h:mm a',
+                            ).format(conversation.lastMessageTime!),
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          )
+                        : null,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) =>
+                              ChatScreen(receiver: conversation.otherUser),
+                          transitionsBuilder: (_, animation, __, child) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
       ),
+    );
+  }
+
+  void _showSearchSheet(BuildContext context, WidgetRef ref) {
+    ref.read(searchQueryProvider.notifier).state = '';
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Color(0xFF3E2C23),
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => ProviderScope(child: _SearchSheet()),
     );
   }
 }
